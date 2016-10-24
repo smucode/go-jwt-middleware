@@ -127,11 +127,12 @@ func (m *JWTMiddleware) logf(format string, args ...interface{}) {
 	}
 }
 
+// Handler wraps the given HTTP handler with the JWT-validating middleware
 func (m *JWTMiddleware) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Let secure process the request. If it returns an error,
 		// that indicates the request should not continue.
-		token, err := m.CheckJWT(w, r)
+		token, err := m.checkJWT(w, r)
 
 		// If there was an error, do not continue.
 		if err != nil {
@@ -176,7 +177,7 @@ func FromFirst(extractors ...TokenExtractor) TokenExtractor {
 	}
 }
 
-func (m *JWTMiddleware) CheckJWT(w http.ResponseWriter, r *http.Request) (*jwt.Token, error) {
+func (m *JWTMiddleware) checkJWT(w http.ResponseWriter, r *http.Request) (*jwt.Token, error) {
 	if !m.Options.EnableAuthOnOptions {
 		if r.Method == "OPTIONS" {
 			return nil, nil
