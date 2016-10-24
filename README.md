@@ -32,35 +32,35 @@ You can use `jwtmiddleware` with default `net/http` as follows.
 package main
 
 import (
-	"fmt"
-	"net/http"
+  "fmt"
+  "net/http"
 
-	"github.com/dgrijalva/jwt-go"
-	"github.com/echojc/go-jwt-middleware"
+  "github.com/dgrijalva/jwt-go"
+  "github.com/echojc/go-jwt-middleware"
 )
 
 func main() {
-	myHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := r.Context().Value("user").(*jwt.Token)
-		fmt.Fprintf(w, "This is an authenticated request")
-		fmt.Fprintf(w, "Claim content:\n")
-		for k, v := range user.Claims {
-			fmt.Fprintf(w, "%s :\t%#v\n", k, v)
-		}
-	})
+  myHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    user := r.Context().Value("user").(*jwt.Token)
+    fmt.Fprintf(w, "This is an authenticated request")
+    fmt.Fprintf(w, "Claim content:\n")
+    for k, v := range user.Claims {
+      fmt.Fprintf(w, "%s :\t%#v\n", k, v)
+    }
+  })
 
-	jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
-		ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
-			return []byte("My Secret"), nil
-		},
-		// When set, the middleware verifies that tokens are signed with the specific signing algorithm
-		// If the signing method is not constant the ValidationKeyGetter callback can be used to implement additional checks
-		// Important to avoid security issues described here: https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/
-		SigningMethod: jwt.SigningMethodHS256,
-	})
+  jwtMiddleware := jwtmiddleware.New(jwtmiddleware.Options{
+    ValidationKeyGetter: func(token *jwt.Token) (interface{}, error) {
+      return []byte("My Secret"), nil
+    },
+    // When set, the middleware verifies that tokens are signed with the specific signing algorithm
+    // If the signing method is not constant the ValidationKeyGetter callback can be used to implement additional checks
+    // Important to avoid security issues described here: https://auth0.com/blog/2015/03/31/critical-vulnerabilities-in-json-web-token-libraries/
+    SigningMethod: jwt.SigningMethodHS256,
+  })
 
-	app := jwtMiddleware.Handler(myHandler)
-	http.ListenAndServe("0.0.0.0:3000", app)
+  app := jwtMiddleware.Handler(myHandler)
+  http.ListenAndServe("0.0.0.0:3000", app)
 }
 ```
 
@@ -77,13 +77,13 @@ type Options struct {
   // Default value: "user"
   UserProperty string
   // The function that will be called when there's an error validating the token
-	// Default value: DefaultErrorHandler (returns 401 Unauthorized)
-	ErrorHandler ErrorHandler
-	// A boolean indicating if the credentials are required or not
-	// Default value: false
-	CredentialsOptional bool
-	// A function that extracts the token from the request
-	// Default: DefaultTokenExtractor (extracts from Authorization header as bearer token)
+  // Default value: DefaultErrorHandler (returns 401 Unauthorized)
+  ErrorHandler ErrorHandler
+  // A boolean indicating if the credentials are required or not
+  // Default value: false
+  CredentialsOptional bool
+  // A function that extracts the token from the request
+  // Default: DefaultTokenExtractor (extracts from Authorization header as bearer token)
   Extractor TokenExtractor
   // Debug flag turns on debugging output
   // Default: false
