@@ -24,8 +24,9 @@ var (
 	ErrInvalidClaims = errors.New("Token claims are invalid")
 )
 
-// A function called whenever an error is encountered
-type errorHandler func(w http.ResponseWriter, r *http.Request, err error)
+// ErrorHandler takes any errors that are returned while validating a JWT and
+// is expected to handle it accordingly.
+type ErrorHandler func(w http.ResponseWriter, r *http.Request, err error)
 
 // TokenExtractor is a function that takes a request as input and returns
 // either a token or an error.  An error should only be returned if an attempt
@@ -46,7 +47,7 @@ type Options struct {
 	UserProperty string
 	// The function that will be called when there's an error validating the token
 	// Default value:
-	ErrorHandler errorHandler
+	ErrorHandler ErrorHandler
 	// A boolean indicating if the credentials are required or not
 	// Default value: false
 	CredentialsOptional bool
