@@ -121,7 +121,7 @@ func (m *JWTMiddleware) logf(format string, args ...interface{}) {
 }
 
 // Handler wraps the given HTTP handler with the JWT-validating middleware
-func (m *JWTMiddleware) Handler(h http.Handler) http.Handler {
+func (m *JWTMiddleware) Handler(h http.Handler) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Let secure process the request. If it returns an error,
 		// that indicates the request should not continue.
@@ -138,7 +138,7 @@ func (m *JWTMiddleware) Handler(h http.Handler) http.Handler {
 }
 
 // HandlerFunc wraps the given HTTP handler function with the JWT-validating middleware
-func (m *JWTMiddleware) HandlerFunc(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
+func (m *JWTMiddleware) HandlerFunc(f func(w http.ResponseWriter, r *http.Request)) http.HandlerFunc {
 	return m.Handler(http.HandlerFunc(f))
 }
 
