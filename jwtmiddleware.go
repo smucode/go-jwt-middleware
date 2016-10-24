@@ -11,8 +11,21 @@ import (
 	"github.com/dgrijalva/jwt-go"
 )
 
+var (
+	// ErrTokenNotFound is returned if the JWT can't be extracted from the request.
+	ErrTokenNotFound = errors.New("Required authorization token not found")
+	// ErrInvalidToken is returned if the JWT can't be parsed.
+	ErrInvalidToken = errors.New("Token could not be parsed")
+	// ErrInvalidSigningMethod is returned if the JWT specifies a different
+	// signing algorithm than the expected one.
+	ErrInvalidSigningMethod = errors.New("Token specifies an invalid signing algorithm")
+	// ErrInvalidClaims is returned if the JWT claims fail to validate (e.g., the
+	// token has expired).
+	ErrInvalidClaims = errors.New("Token claims are invalid")
+)
+
 // A function called whenever an error is encountered
-type errorHandler func(w http.ResponseWriter, r *http.Request, err string)
+type errorHandler func(w http.ResponseWriter, r *http.Request, err error)
 
 // TokenExtractor is a function that takes a request as input and returns
 // either a token or an error.  An error should only be returned if an attempt
@@ -53,12 +66,15 @@ type Options struct {
 	SigningMethod jwt.SigningMethod
 }
 
+// JWTMiddleware represents the middleware, extracting the token and validating
+// it before passing control to the next handler.
 type JWTMiddleware struct {
 	Options Options
 }
 
-func OnError(w http.ResponseWriter, r *http.Request, err string) {
-	http.Error(w, err, http.StatusUnauthorized)
+// DefaultErrorHandler returns 401 Unauthorized with the reason in the body.
+func DefaultErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
+	http.Error(w, err.Error(), http.StatusUnauthorized)
 }
 
 // New constructs a new Secure instance with supplied options.
@@ -76,7 +92,7 @@ func New(options ...Options) *JWTMiddleware {
 	}
 
 	if opts.ErrorHandler == nil {
-		opts.ErrorHandler = OnError
+		opts.ErrorHandler = DefaultErrorHandler
 	}
 
 	if opts.Extractor == nil {
@@ -171,8 +187,8 @@ func (m *JWTMiddleware) CheckJWT(w http.ResponseWriter, r *http.Request) (*jwt.T
 
 	// If an error occurs, call the error handler and return an error
 	if err != nil {
-		m.Options.ErrorHandler(w, r, err.Error())
-		return nil, fmt.Errorf("Error extracting token: %v", err)
+		m.Options.ErrorHandler(w, r, err)
+		return nil, err
 	}
 
 	// If the token is empty...
@@ -185,10 +201,9 @@ func (m *JWTMiddleware) CheckJWT(w http.ResponseWriter, r *http.Request) (*jwt.T
 		}
 
 		// If we get here, the required token is missing
-		errorMsg := "Required authorization token not found"
-		m.Options.ErrorHandler(w, r, errorMsg)
+		m.Options.ErrorHandler(w, r, ErrTokenNotFound)
 		m.logf("  Error: No credentials found (CredentialsOptional=false)")
-		return nil, fmt.Errorf(errorMsg)
+		return nil, ErrTokenNotFound
 	}
 
 	// Now parse the token
@@ -197,8 +212,8 @@ func (m *JWTMiddleware) CheckJWT(w http.ResponseWriter, r *http.Request) (*jwt.T
 	// Check if there was an error in parsing...
 	if err != nil {
 		m.logf("Error parsing token: %v", err)
-		m.Options.ErrorHandler(w, r, err.Error())
-		return nil, fmt.Errorf("Error parsing token: %v", err)
+		m.Options.ErrorHandler(w, r, ErrInvalidToken)
+		return nil, ErrInvalidToken
 	}
 
 	if m.Options.SigningMethod != nil && m.Options.SigningMethod.Alg() != parsedToken.Header["alg"] {
@@ -206,15 +221,15 @@ func (m *JWTMiddleware) CheckJWT(w http.ResponseWriter, r *http.Request) (*jwt.T
 			m.Options.SigningMethod.Alg(),
 			parsedToken.Header["alg"])
 		m.logf("Error validating token algorithm: %s", message)
-		m.Options.ErrorHandler(w, r, errors.New(message).Error())
-		return nil, fmt.Errorf("Error validating token algorithm: %s", message)
+		m.Options.ErrorHandler(w, r, ErrInvalidSigningMethod)
+		return nil, ErrInvalidSigningMethod
 	}
 
 	// Check if the parsed token is valid...
 	if !parsedToken.Valid {
 		m.logf("Token is invalid")
-		m.Options.ErrorHandler(w, r, "The token isn't valid")
-		return nil, fmt.Errorf("Token is invalid")
+		m.Options.ErrorHandler(w, r, ErrInvalidClaims)
+		return nil, ErrInvalidClaims
 	}
 
 	m.logf("JWT: %v", parsedToken)

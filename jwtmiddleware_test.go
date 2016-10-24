@@ -66,7 +66,7 @@ func TestAuthenticatedRequest(t *testing.T) {
 		{"GET", "/protected", nil, http.StatusOK, `{"text":"bar"}`},
 		{"GET", "/protected", jwt.SigningMethodHS256, http.StatusOK, `{"text":"bar"}`},
 		// protected but wrong expected algorithm
-		{"GET", "/protected", jwt.SigningMethodRS256, http.StatusUnauthorized, "Expected RS256 signing method but token specified HS256"},
+		{"GET", "/protected", jwt.SigningMethodRS256, http.StatusUnauthorized, ErrInvalidSigningMethod.Error()},
 	}
 
 	for _, testCase := range testCases {
