@@ -77,6 +77,23 @@ func DefaultErrorHandler(w http.ResponseWriter, r *http.Request, err error) {
 	http.Error(w, err.Error(), http.StatusUnauthorized)
 }
 
+// DefaultTokenExtractor extracts the JWT from the Authorization header.
+// The header value is expected to be in the `bearer {token}` format.
+func DefaultTokenExtractor(r *http.Request) (string, error) {
+	authHeader, err := FromHeader("Authorization")(r)
+	if err != nil {
+		return "", nil // No error, just no token
+	}
+
+	// TODO: Make this a bit more robust, parsing-wise
+	authHeaderParts := strings.Split(authHeader, " ")
+	if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
+		return "", fmt.Errorf("Authorization header format must be Bearer {token}")
+	}
+
+	return authHeaderParts[1], nil
+}
+
 // New constructs a new Secure instance with supplied options.
 func New(options ...Options) *JWTMiddleware {
 
@@ -96,7 +113,7 @@ func New(options ...Options) *JWTMiddleware {
 	}
 
 	if opts.Extractor == nil {
-		opts.Extractor = FromAuthHeader
+		opts.Extractor = DefaultTokenExtractor
 	}
 
 	return &JWTMiddleware{
@@ -126,21 +143,12 @@ func (m *JWTMiddleware) Handler(h http.Handler) http.Handler {
 	})
 }
 
-// FromAuthHeader is a "TokenExtractor" that takes a give request and extracts
-// the JWT token from the Authorization header.
-func FromAuthHeader(r *http.Request) (string, error) {
-	authHeader := r.Header.Get("Authorization")
-	if authHeader == "" {
-		return "", nil // No error, just no token
+// FromHeader returns a function that extracts the token from the specified
+// HTTP header
+func FromHeader(header string) TokenExtractor {
+	return func(r *http.Request) (string, error) {
+		return r.Header.Get(header), nil
 	}
-
-	// TODO: Make this a bit more robust, parsing-wise
-	authHeaderParts := strings.Split(authHeader, " ")
-	if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
-		return "", fmt.Errorf("Authorization header format must be Bearer {token}")
-	}
-
-	return authHeaderParts[1], nil
 }
 
 // FromParameter returns a function that extracts the token from the specified
