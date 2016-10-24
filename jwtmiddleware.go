@@ -46,13 +46,13 @@ type Options struct {
 	// Default value: "user"
 	UserProperty string
 	// The function that will be called when there's an error validating the token
-	// Default value:
+	// Default value: DefaultErrorHandler (returns 401 Unauthorized)
 	ErrorHandler ErrorHandler
 	// A boolean indicating if the credentials are required or not
 	// Default value: false
 	CredentialsOptional bool
 	// A function that extracts the token from the request
-	// Default: FromAuthHeader (i.e., from Authorization header as bearer token)
+	// Default: DefaultTokenExtractor (extracts from Authorization header as bearer token)
 	Extractor TokenExtractor
 	// Debug flag turns on debugging output
 	// Default: false
