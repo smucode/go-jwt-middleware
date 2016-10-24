@@ -137,6 +137,11 @@ func (m *JWTMiddleware) Handler(h http.Handler) http.Handler {
 	})
 }
 
+// HandlerFunc wraps the given HTTP handler function with the JWT-validating middleware
+func (m *JWTMiddleware) HandlerFunc(f func(w http.ResponseWriter, r *http.Request)) http.Handler {
+	return m.Handler(http.HandlerFunc(f))
+}
+
 // FromHeader returns a function that extracts the token from the specified
 // HTTP header
 func FromHeader(header string) TokenExtractor {
