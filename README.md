@@ -132,10 +132,6 @@ jwtmiddleware.New(jwtmiddleware.Options{
 })
 ```
 
-## Examples
-
-You can check out working examples in the [examples folder](https://github.com/auth0/go-jwt-middleware/tree/master/examples)
-
 ## What is Auth0?
 
 Auth0 helps you to:
