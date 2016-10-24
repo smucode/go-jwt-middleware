@@ -95,16 +95,8 @@ func DefaultTokenExtractor(r *http.Request) (string, error) {
 	return authHeaderParts[1], nil
 }
 
-// New constructs a new Secure instance with supplied options.
-func New(options ...Options) *JWTMiddleware {
-
-	var opts Options
-	if len(options) == 0 {
-		opts = Options{}
-	} else {
-		opts = options[0]
-	}
-
+// New constructs a new JWTMiddleware instance with supplied options.
+func New(opts Options) *JWTMiddleware {
 	if opts.UserProperty == "" {
 		opts.UserProperty = "user"
 	}
