@@ -101,12 +101,21 @@ type Options struct {
 
 ### Token Extraction
 
-The default value for the `Extractor` option is the `FromAuthHeader`
+The default value for the `Extractor` option is the `DefaultTokenExtractor`
 function which assumes that the JWT will be provided as a bearer token
 in an `Authorization` header, i.e.,
 
 ```
 Authorization: bearer {token}
+```
+
+To extract the token from a different header, you can use the `FromHeader`
+function, e.g.,
+
+```go
+jwtmiddleware.New(jwtmiddleware.Options{
+  Extractor: jwtmiddleware.FromHeader("X-My-Header"),
+})
 ```
 
 To extract the token from a query string parameter, you can use the
@@ -127,7 +136,7 @@ other ways, e.g.,
 
 ```go
 jwtmiddleware.New(jwtmiddleware.Options{
-  Extractor: jwtmiddleware.FromFirst(jwtmiddleware.FromAuthHeader,
+  Extractor: jwtmiddleware.FromFirst(jwtmiddleware.DefaultTokenExtractor,
                                      jwtmiddleware.FromParameter("auth_code")),
 })
 ```
